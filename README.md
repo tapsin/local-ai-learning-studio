@@ -1,4 +1,4 @@
-# Local AI Studio
+# Local AI Learning Studio
 
 Yerel öncelikli RAG ve model fine-tuning masaüstü uygulaması. Arayüz Electron + React + TypeScript ile hazırlanır.
 
@@ -27,13 +27,13 @@ Uygulama içindeki “Yeni çalışma oluştur” bölümünden boş CSV veya Ex
 
 RAG indeksi, kaynaklı benzerlik araması ve isteğe bağlı yerel modelle yanıt üretimi ile QLoRA fine-tuning işleri yerel Python worker üzerinden yürütülür. Yerel yanıt seçeneği için Transformers destekli bir sohbet modelini Hugging Face’ten indirin. GGUF dosyaları Transformers ile yanıt üretiminde kullanılamaz. Cevap kalitesi seçilen modele ve kaynakların uygunluğuna bağlıdır; yanıtlar kaynak kartlarıyla kontrol edilmelidir. QLoRA model/VRAM uyumluluğuna bağlıdır. Hugging Face indirmesi büyük model depolarında disk alanı ve ağ gerektirir; gated/private modeller token ister.
 
-Token Electron userData klasöründeki ayar dosyasında kullanıcıya özel izinlerle saklanır. Üretim sürümünde işletim sisteminin güvenli credential store (keychain/credential vault) entegrasyonuna geçirilmesi önerilir.
+Token Electron userData klasöründeki ayar dosyasında kullanıcıya özel izinlerle saklanır. API anahtarı işletim sisteminin Electron safeStorage güvenli deposunda şifrelenir.
 
 ## Belgeden eğitim CSV’si oluşturma
 
-Sol menüdeki Belge dönüştürücü PDF, DOC/DOCX, XLS/XLSX, TXT, RTF, MD ve CSV dosyalarını instruction/input/output CSV satırlarına dönüştürür. PDF metin tabanlı olmalıdır; taranmış sayfalarda OCR bu sürümde desteklenmez. Eski DOC dosyaları Antiword gerektirir; yoksa DOCX biçimine dönüştürüp yeniden deneyin. Kaynak dosya sınırı 25 MB, çıkarılan metin sınırı 5.000.000 karakterdir. Metin otomatik parçalara ayrılır ve API’ye sırayla gönderilir; ilerleme toplam parça üzerinden gösterilir.
+Sol menüdeki Belge dönüştürücü PDF, DOC/DOCX, XLS/XLSX, TXT, RTF, MD ve CSV dosyalarını seçilen çıktı türüne göre dönüştürür. PDF metin tabanlı olmalıdır; taranmış sayfalarda OCR bu sürümde desteklenmez. Eski DOC dosyaları Antiword gerektirir; yoksa DOCX biçimine dönüştürüp yeniden deneyin. Kaynak dosya sınırı 25 MB, çıkarılan metin sınırı 5.000.000 karakterdir. Metin otomatik parçalara ayrılır ve API’ye sırayla gönderilir; ilerleme toplam parça üzerinden gösterilir.
 
-Dönüştürücü OpenAI uyumlu chat-completions API kullanır. API adresi ve model yerel ayarlara kaydedilir. API anahtarı diske kaydedilmez; uygulama açıkken bellekte tutulur. Belge metni yalnızca açık onay verildiğinde belirtilen sağlayıcıya gönderilir ve kullanım ücret doğurabilir. Hassas/hukuki belgeleri göndermeden önce sağlayıcının veri politikasını inceleyin. CSV çıktısı ana eğitim ekranındaki fine-tuning ile uyumlu instruction,input,output sütunlarını taşır.
+Dönüştürücü OpenAI uyumlu chat-completions API kullanır. API adresi ve model yerel ayarlara kaydedilir. Fine-tuning çıktısı `instruction,input,output`; RAG çıktısı `text,metadata,source` sütunlarını taşır. Belge metni yalnızca açık onay verildiğinde belirtilen sağlayıcıya gönderilir ve kullanım ücret doğurabilir.
 
 ## Yerel AI çalışma ortamı
 
