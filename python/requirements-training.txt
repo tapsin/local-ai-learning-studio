@@ -1,0 +1,8 @@
+torch>=2.6,<3
+-r requirements-rag.txt
+transformers>=5.17,<6
+peft>=0.21,<1
+trl>=0.29,<1
+datasets>=4.8,<5
+accelerate>=1.15,<2
+bitsandbytes>=0.50,<1

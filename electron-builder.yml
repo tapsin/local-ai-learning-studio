@@ -1,0 +1,11 @@
+appId: com.localaistudio.app
+productName: Local AI Studio
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+extraResources:
+  - from: python
+    to: python

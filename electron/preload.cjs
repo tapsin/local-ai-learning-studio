@@ -1,0 +1,26 @@
+const { contextBridge, ipcRenderer } = require('electron')
+contextBridge.exposeInMainWorld('studio', {
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  saveSettings: value => ipcRenderer.invoke('settings:save', value),
+  listJobs: () => ipcRenderer.invoke('jobs:list'),
+  listLocalModels: () => ipcRenderer.invoke('models:list-local'),
+  saveConverterSettings: value => ipcRenderer.invoke('converter:save-settings', value),
+  openConverterFile: () => ipcRenderer.invoke('dialog:open-converter'),
+  convertDocument: value => ipcRenderer.invoke('converter:convert', value),
+  saveConverterCsv: rows => ipcRenderer.invoke('converter:save-csv', rows),
+  onConverterProgress: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('converter:progress', listener); return () => ipcRenderer.removeListener('converter:progress', listener) },
+  setupWorker: options => ipcRenderer.invoke('worker:setup', options),
+  validateToken: token => ipcRenderer.invoke('hf:validate', token),
+  searchModels: value => ipcRenderer.invoke('hf:search', value),
+  downloadModel: value => ipcRenderer.invoke('hf:download', value),
+  onDownloadProgress: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('hf:download-progress', listener); return () => ipcRenderer.removeListener('hf:download-progress', listener) },
+  openDataFile: () => ipcRenderer.invoke('dialog:open-data'),
+  readDataFile: file => ipcRenderer.invoke('data:read', file),
+  writeTemplate: value => ipcRenderer.invoke('template:write', value),
+  runJob: job => ipcRenderer.invoke('worker:run', job),
+  onWorkerEvent: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('worker:event', listener); return () => ipcRenderer.removeListener('worker:event', listener) },
+  onSetupProgress: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('worker:setup-progress', listener); return () => ipcRenderer.removeListener('worker:setup-progress', listener) },
+  saveTemplate: ext => ipcRenderer.invoke('dialog:save-template', ext),
+  chooseDownloadDir: () => ipcRenderer.invoke('dialog:download-dir'),
+  openPath: path => ipcRenderer.invoke('shell:open-path', path)
+})

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+squashfs-root/
+.venv/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
