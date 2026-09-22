@@ -17,7 +17,8 @@ npm start
 npm run dist:linux   # Linux AppImage
 npm run dist:windows # Windows NSIS .exe (Windows üzerinde paketlenmesi önerilir)
 ```
-
+Download Linux : https://files.fm/u/8cz7qftdymbjkj6k
+Download Windows : https://files.fm/u/xnu45pcu7xaxrmqa
 ## Veri şablonları
 
 Uygulama içindeki “Yeni çalışma oluştur” bölümünden boş CSV veya Excel şablonunu indirebilirsiniz.
