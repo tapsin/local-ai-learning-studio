@@ -38,6 +38,25 @@ def iter_parquet_rows(folder):
                 yield {name: values[index] for name, values in data.items()}
 
 
+def iter_json_rows(source):
+    """Read a JSON array (or {rows: [...]}) exported from a dataset bucket."""
+    path = Path(source)
+    files = sorted(path.rglob("*.json")) if path.is_dir() else [path]
+    if not files:
+        raise ValueError("Klasörde JSON veri dosyası bulunamadı.")
+    for filename in files:
+        with filename.open("r", encoding="utf-8-sig") as handle:
+            payload = json.load(handle)
+        rows = payload.get("rows", payload) if isinstance(payload, dict) else payload
+        if isinstance(rows, dict):
+            rows = [rows]
+        if not isinstance(rows, list):
+            raise ValueError("JSON veri listesi veya rows alanı içermeli.")
+        for row in rows:
+            if isinstance(row, dict):
+                yield row
+
+
 def extract_training_text(filename, max_characters=5000000):
     """Extract a bounded local text representation for a user-approved AI conversion."""
     import subprocess
@@ -127,7 +146,14 @@ def rag(job):
     root.mkdir(parents=True, exist_ok=True)
     chunks, metas = [], []
     source_path = Path(job["dataFile"])
-    rows = iter_parquet_rows(source_path) if source_path.is_dir() or source_path.suffix.lower() == ".parquet" else read_rows(source_path)
+    if source_path.is_dir():
+        rows = iter_parquet_rows(source_path) if any(source_path.rglob("*.parquet")) else iter_json_rows(source_path)
+    elif source_path.suffix.lower() == ".parquet":
+        rows = iter_parquet_rows(source_path)
+    elif source_path.suffix.lower() == ".json":
+        rows = iter_json_rows(source_path)
+    else:
+        rows = read_rows(source_path)
     max_rows = max(0, int(cfg.get("maxRows", 0)))
     for row_index, row in enumerate(rows):
         if max_rows and row_index >= max_rows:
