@@ -77,8 +77,9 @@ function App() {
   }
   async function chooseParquetFolder() {
     if (mode !== 'rag') return flash('Parquet klasörü şu aşamada yalnızca RAG için kullanılabilir.')
-    const path = await window.studio.openDataFolder(); if (!path) return
-    setFile(path); setRows([{ text: 'Parquet klasörü · streaming okuma' }]); flash('Parquet klasörü seçildi; dosyalar RAM’e alınmadan indekslenecek.')
+    try { const path = await window.studio.openDataFolder(); if (!path) return
+      setFile(path); setRows([{ text: 'Parquet klasörü · streaming okuma' }]); flash('Parquet klasörü seçildi; dosyalar RAM’e alınmadan indekslenecek.')
+    } catch (e:any) { flash(`Klasör seçilemedi: ${e.message}`) }
   }
   function dropParquetFolder(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
