@@ -258,6 +258,10 @@ app.whenReady().then(() => {
     const result = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'Veri dosyaları', extensions: ['csv', 'xlsx'] }] })
     return result.canceled ? null : result.filePaths[0]
   })
+  ipcMain.handle('dialog:open-data-folder', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled ? null : result.filePaths[0]
+  })
   ipcMain.handle('dialog:save-template', async (_e, extension) => {
     const filters = extension === 'xlsx' ? [{ name: 'Excel', extensions: ['xlsx'] }] : [{ name: 'CSV', extensions: ['csv'] }]
     return dialog.showSaveDialog({ defaultPath: `egitim-sablonu.${extension}`, filters })

@@ -21,6 +21,23 @@ def read_rows(filename):
     raise ValueError("Yalnızca CSV veya XLSX destekleniyor.")
 
 
+def iter_parquet_rows(folder):
+    """Stream HF-style parquet shards without loading the dataset into memory."""
+    import pyarrow.parquet as pq
+    root = Path(folder)
+    files = sorted(root.rglob("*.parquet")) if root.is_dir() else [root]
+    if not files:
+        raise ValueError("Klasörde Parquet dosyası bulunamadı.")
+    for filename in files:
+        parquet = pq.ParquetFile(str(filename))
+        if "text" not in parquet.schema.names:
+            continue
+        for batch in parquet.iter_batches(batch_size=256):
+            data = batch.to_pydict()
+            for index in range(batch.num_rows):
+                yield {name: values[index] for name, values in data.items()}
+
+
 def extract_training_text(filename, max_characters=5000000):
     """Extract a bounded local text representation for a user-approved AI conversion."""
     import subprocess
@@ -92,9 +109,13 @@ def rag(job):
     overlap = max(0, min(chunk_size - 1, int(cfg.get("overlap", 100))))
     root = Path(job["outputDir"]).resolve()
     root.mkdir(parents=True, exist_ok=True)
-    rows = read_rows(job["dataFile"])
     chunks, metas = [], []
-    for row in rows:
+    source_path = Path(job["dataFile"])
+    rows = iter_parquet_rows(source_path) if source_path.is_dir() or source_path.suffix.lower() == ".parquet" else read_rows(source_path)
+    max_rows = max(0, int(cfg.get("maxRows", 0)))
+    for row_index, row in enumerate(rows):
+        if max_rows and row_index >= max_rows:
+            break
         text = str(row.get("text", "") or "").strip()
         for start in range(0, len(text), chunk_size - overlap):
             value = text[start:start + chunk_size].strip()

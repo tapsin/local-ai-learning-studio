@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('studio', {
   downloadModel: value => ipcRenderer.invoke('hf:download', value),
   onDownloadProgress: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('hf:download-progress', listener); return () => ipcRenderer.removeListener('hf:download-progress', listener) },
   openDataFile: () => ipcRenderer.invoke('dialog:open-data'),
+  openDataFolder: () => ipcRenderer.invoke('dialog:open-data-folder'),
   readDataFile: file => ipcRenderer.invoke('data:read', file),
   writeTemplate: value => ipcRenderer.invoke('template:write', value),
   runJob: job => ipcRenderer.invoke('worker:run', job),

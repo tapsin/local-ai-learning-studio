@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { DragEvent } from 'react'
 import { Activity, ArrowDownToLine, BookOpen, Check, ChevronDown, CircleHelp, Cpu, Database, FileSpreadsheet, FileText, FolderOpen, Gauge, Github, HardDrive, KeyRound, Layers3, LayoutDashboard, Menu, MessageSquareText, Plus, Search, Settings2, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
 import ExcelJS from 'exceljs'
 
@@ -42,6 +43,7 @@ function App() {
   const [file, setFile] = useState(''), [rows, setRows] = useState<Row[]>([]), [downloadStatus, setDownloadStatus] = useState(''), [nav, setNav] = useState('Çalışma alanı'), [indexedDir, setIndexedDir] = useState(''), [question, setQuestion] = useState(''), [matches, setMatches] = useState<any[]>([]), [answer, setAnswer] = useState(''), [queryBusy, setQueryBusy] = useState(false)
   const [jobs, setJobs] = useState<any[]>([]), [localModels, setLocalModels] = useState<Array<{id:string;path:string}>>([]), [pythonReady, setPythonReady] = useState({rag:false,training:false}), [generateAnswer, setGenerateAnswer] = useState(false), [chunkSize, setChunkSize] = useState('700'), [overlap, setOverlap] = useState('100'), [epochs, setEpochs] = useState('3'), [batch, setBatch] = useState('2'), [convertBaseUrl, setConvertBaseUrl] = useState('https://api.openai.com/v1'), [convertModel, setConvertModel] = useState(''), [convertKey, setConvertKey] = useState(''), [convertFile, setConvertFile] = useState(''), [convertConsent, setConvertConsent] = useState(false), [convertRows, setConvertRows] = useState<Array<{instruction:string;input:string;output:string}>>([]), [convertBusy, setConvertBusy] = useState(false), [convertReady, setConvertReady] = useState(false)
   const [convertOutputMode, setConvertOutputMode] = useState<'training'|'rag'>('training')
+  const [parquetMaxRows, setParquetMaxRows] = useState('10000')
   const [convertHasSavedKey, setConvertHasSavedKey] = useState(false)
   useEffect(() => { window.studio.getSettings().then(s => { setToken(s.token); setDownloadDir(s.downloadDir); setPythonReady({rag:s.ragReady,training:s.trainingReady});setConvertReady(s.convertReady);setConvertBaseUrl(s.converter.baseUrl);setConvertModel(s.converter.model);setConvertHasSavedKey(s.converter.hasApiKey) }).catch(() => {}) }, [])
   useEffect(() => { window.studio.listJobs().then(setJobs).catch(() => {}); window.studio.listLocalModels().then(setLocalModels).catch(() => {}) }, [])
@@ -73,6 +75,18 @@ function App() {
       setRows(data); setFile(path); flash(`${data.length} satır içe aktarıldı`)
     } catch (e:any) { flash(`Dosya okunamadı: ${e.message}`) }
   }
+  async function chooseParquetFolder() {
+    if (mode !== 'rag') return flash('Parquet klasörü şu aşamada yalnızca RAG için kullanılabilir.')
+    const path = await window.studio.openDataFolder(); if (!path) return
+    setFile(path); setRows([{ text: 'Parquet klasörü · streaming okuma' }]); flash('Parquet klasörü seçildi; dosyalar RAM’e alınmadan indekslenecek.')
+  }
+  function dropParquetFolder(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+    if (mode !== 'rag') return flash('Parquet klasörü şu aşamada yalnızca RAG için kullanılabilir.')
+    const path = (event.dataTransfer.files[0] as File & { path?: string })?.path
+    if (!path) return flash('Klasör yolu okunamadı; klasör seç düğmesini kullanın.')
+    setFile(path); setRows([{ text: 'Parquet klasörü · streaming okuma' }]); flash('Parquet klasörü seçildi; dosyalar RAM’e alınmadan indekslenecek.')
+  }
   async function saveTemplate(ext:string) {
     const result = await window.studio.saveTemplate(ext); if (!result.filePath) return
     const wb = new ExcelJS.Workbook(); const sheet = wb.addWorksheet(mode === 'rag' ? 'Dokümanlar' : 'Eğitim verisi')
@@ -89,12 +103,12 @@ function App() {
   }
   async function createJob() {
     const required = mode === 'rag' ? ['text'] : ['instruction','output']
-    if (!rows.length) return flash('Önce CSV/Excel eğitim dosyanızı yükleyin.')
+    if (!rows.length) return flash('Önce CSV/Excel dosyası veya Parquet klasörü yükleyin.')
     const missing = required.filter(key => !columns.includes(key))
     if (missing.length) return flash(`Eksik sütun: ${missing.join(', ')}. Örnek şablonu kullanın.`)
     if (!selectedModel && mode==='training') return flash('Fine-tuning için önce Hugging Face modelini seçin veya indirin.')
     if(!pythonReady[mode]){setBusy(true);setDownloadStatus(mode==='training'?'Fine-tuning ortamı hazırlanıyor…':'RAG ortamı hazırlanıyor…');try{await window.studio.setupWorker({gpu:mode==='training'});setPythonReady(current=>({...current,[mode]:true}))}catch(e:any){setBusy(false);setDownloadStatus('');return flash(`Python ortamı kurulamadı: ${e.message}`)}setBusy(false);setDownloadStatus('')}
-    const config = mode === 'rag' ? { chunkSize:Number(chunkSize), overlap:Number(overlap), embeddingModel:'sentence-transformers/all-MiniLM-L6-v2', vectorStore:'ChromaDB' } : { method:'QLoRA', epochs:Number(epochs), batchSize:Number(batch), gradientAccumulationSteps:4, learningRate:0.0002, baseModel:selectedModel }
+    const config = mode === 'rag' ? { chunkSize:Number(chunkSize), overlap:Number(overlap), embeddingModel:'sentence-transformers/all-MiniLM-L6-v2', vectorStore:'ChromaDB', maxRows:file.toLowerCase().endsWith('.parquet') || file.includes('YargitayData') ? Number(parquetMaxRows) : 0 } : { method:'QLoRA', epochs:Number(epochs), batchSize:Number(batch), gradientAccumulationSteps:4, learningRate:0.0002, baseModel:selectedModel }
     setBusy(true); setDownloadStatus(mode==='rag'?'RAG indeksi hazırlanıyor…':'Eğitim başlatılıyor…')
     try { const result = await window.studio.runJob({type:mode,model:mode==='rag'?'local-rag':selectedModel,dataFile:file,rowCount:rows.length,config}); setDownloadStatus(''); setJobs(await window.studio.listJobs()); if(mode==='rag'){setIndexedDir(result.outputDir);flash(`RAG indeksi hazır · ${result.result?.chunks||rows.length}`)}else flash(`Eğitim tamamlandı · ${result.outputDir}`) } catch(e:any) { setDownloadStatus(''); setJobs(await window.studio.listJobs()); flash(e.message||'İş başarısız oldu') } finally { setBusy(false) }
   }
@@ -143,6 +157,7 @@ function App() {
       <div className="sidebar-bottom"><div className="local-card"><div className="local-icon"><ShieldCheck size={17}/></div><div><b>Verileriniz sizde kalır</b><small>Yerel öncelikli çalışma</small></div><span className="online-dot"/></div><div className="profile"><div className="profile-avatar">T</div><div><b>Yerel kullanıcı</b><small>Ücretsiz plan</small></div><ChevronDown size={15}/></div></div>
     </aside>
     <main className="main-area">
+      {nav==='Çalışma alanı'&&mode==='rag'&&<div className="panel converter-panel" style={{marginBottom:16}} onDragOver={e=>e.preventDefault()} onDrop={dropParquetFolder}><b>Hugging Face Parquet klasörü</b><small>YargıtayData klasörünü buraya sürükleyin veya seçin. Dosyalar streaming okunur; tüm veri RAM’e alınmaz.</small><button className="button secondary" onClick={chooseParquetFolder}><FolderOpen size={15}/>Parquet klasörü seç</button><label>Deneme kayıt limiti<input type="number" min="1" max="1000000" value={parquetMaxRows} onChange={e=>setParquetMaxRows(e.target.value)}/></label></div>}
       {nav==='Dönüştürücü'&&<div className="panel converter-panel" style={{marginBottom:16}}><label>Çıktı türü<select value={convertOutputMode} onChange={e=>{setConvertOutputMode(e.target.value as 'training'|'rag');setConvertRows([])}}><option value="training">Fine-tuning · instruction / input / output</option><option value="rag">RAG · text / metadata / source</option></select></label><small>RAG seçerseniz CSV, RAG örnek şablonundaki sütunlarla oluşturulur.</small></div>}
       <header className="topbar"><div className="breadcrumbs"><span>Atölyem</span><span className="crumb-sep">/</span><b>{nav}</b></div><div className="top-actions"><div className="system-status"><i/>Yerel mod aktif</div><button className="help-button" onClick={()=>flash('RAG belgelerden bilgi getirir. Fine-tuning model davranışını/verdiği cevap biçimini örneklerle günceller.')}><CircleHelp size={17}/><span>Yardım</span></button><div className="top-avatar">T</div></div></header>
       <div className="content">
