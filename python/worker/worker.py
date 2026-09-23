@@ -45,6 +45,22 @@ def extract_training_text(filename, max_characters=5000000):
     import shutil
     path = Path(filename)
     suffix = path.suffix.lower()
+    if path.is_dir():
+        pieces = []
+        total = 0
+        for row in iter_parquet_rows(path):
+            value = str(row.get("text", "") or "").strip()
+            if not value:
+                continue
+            piece = f"Kaynak: {row.get('source', '')}\n{value}"
+            pieces.append(piece)
+            total += len(piece) + 2
+            if total >= max_characters:
+                break
+        text = "\n\n".join(pieces)[:max_characters]
+        if not text:
+            raise ValueError("Parquet klasöründe text alanı bulunan kayıt bulunamadı.")
+        return text
     if suffix == ".pdf":
         from pypdf import PdfReader
         pieces = [page.extract_text() or "" for page in PdfReader(str(path)).pages]

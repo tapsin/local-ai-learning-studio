@@ -1,6 +1,6 @@
 {
   "name": "local-ai-studio",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "Local-first RAG and fine-tuning desktop studio",
   "main": "electron/main.cjs",

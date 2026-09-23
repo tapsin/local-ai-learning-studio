@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('studio', {
   listLocalModels: () => ipcRenderer.invoke('models:list-local'),
   saveConverterSettings: value => ipcRenderer.invoke('converter:save-settings', value),
   openConverterFile: () => ipcRenderer.invoke('dialog:open-converter'),
+  openConverterFolder: () => ipcRenderer.invoke('dialog:open-converter-folder'),
   convertDocument: value => ipcRenderer.invoke('converter:convert', value),
   saveConverterCsv: rows => ipcRenderer.invoke('converter:save-csv', rows),
   onConverterProgress: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('converter:progress', listener); return () => ipcRenderer.removeListener('converter:progress', listener) },

@@ -58,6 +58,10 @@ app.whenReady().then(() => {
     const result = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'Belgeler', extensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'xlsm', 'txt', 'md', 'csv', 'rtf'] }] })
     return result.canceled ? null : result.filePaths[0]
   })
+  ipcMain.handle('dialog:open-converter-folder', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled ? null : result.filePaths[0]
+  })
   ipcMain.handle('converter:convert', async (event, { filePath, apiKey, shareWithProvider, outputMode = 'training' }) => {
     if (shareWithProvider !== true) throw new Error('Dosyanın API sağlayıcısına gönderilmesini onaylamalısınız.')
     const settings = await readSettings()
@@ -74,8 +78,8 @@ app.whenReady().then(() => {
     if (!model) throw new Error('API adresi ve modelini Ayarlar bölümünde kaydedin.')
     const inputPath = path.resolve(String(filePath || ''))
     const stat = await fs.stat(inputPath)
-    if (!stat.isFile() || stat.size > 25 * 1024 * 1024) throw new Error('Dosya 25 MB sınırını aşmamalı.')
-    if (!['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.xlsm', '.txt', '.md', '.csv', '.rtf'].includes(path.extname(inputPath).toLowerCase())) throw new Error('Desteklenmeyen dosya biçimi.')
+    if (stat.isFile() && stat.size > 25 * 1024 * 1024) throw new Error('Dosya 25 MB sınırını aşmamalı.')
+    if (!stat.isDirectory() && !['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.xlsm', '.txt', '.md', '.csv', '.rtf'].includes(path.extname(inputPath).toLowerCase())) throw new Error('Desteklenmeyen dosya biçimi.')
     const python = path.join(pythonEnv(), process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python')
     const workerFile = app.isPackaged ? path.join(process.resourcesPath, 'python/worker/worker.py') : path.join(__dirname, '../python/worker/worker.py')
     const child = spawn(python, [workerFile], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true })
