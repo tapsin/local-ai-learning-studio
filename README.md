@@ -1,13 +1,5 @@
 # Local AI Learning Studio
 
-<table border="1">
-<tr><th colspan="2">DONATE:</th></tr>
-<tr><td>USDT TRC20</td><td><code>TYCK6ZyMS6UDt787foPH2QwFuvkdqMw1Jv</code></td></tr>
-<tr><td>USDT BSC20</td><td><code>0x15aac92a1945ddbe5c79304bfa388d6be99b26a3</code></td></tr>
-</table>
-
-Created by TAPSIN
-
 Yerel öncelikli RAG ve model fine-tuning masaüstü uygulaması. Arayüz Electron + React + TypeScript ile hazırlanır.
 
 ## Geliştirme
@@ -49,3 +41,12 @@ Dönüştürücü OpenAI uyumlu chat-completions API kullanır. API adresi ve mo
 İlk RAG işi CPU uyumlu Python sanal ortamını ve embedding bağımlılıklarını kurar. Embedding modeli çevrim içiyken indirilip Hugging Face önbelleğinde tutulur; indeksleme ve sorgu sırasında dış ağa model indirme yapılmaz. Fine-tuning ayrı bir hazır olma durumuna sahiptir ve sonradan CUDA eğitim paketlerini ayrıca yükler. Bu ilk indirme internet erişimi ve birkaç GB boş disk alanı gerektirebilir. Fine-tuning seçeneği ayrıca CUDA uyumlu NVIDIA PyTorch kurar; model ve eğitim verisi yerel makinede işlenir. Eğitim çıktı klasörü uygulama userData alanındaki `training-output` altındadır. RAG koleksiyonları userData içindeki `knowledge-bases` altına yazılır.
 
 Linux AppImage oluşturma/çalıştırma Linux ortamında doğrulanmalıdır. Windows installer için `.github/workflows/windows.yml` içindeki GitHub Actions iş akışını çalıştırabilir veya Windows üzerinde `npm run dist:windows` kullanabilirsiniz. Bu Linux ortamında NSIS 3.0.4.1 derleyicisi `!addincludedir` komutunu tanımadığı için `.exe` kurulumu üretilemedi; Windows iş akışının sonucu bu ortamda henüz doğrulanmadı.
+
+## DONATE
+
+<table border="1">
+<tr><td>USDT TRC20</td><td><code>TYCK6ZyMS6UDt787foPH2QwFuvkdqMw1Jv</code></td></tr>
+<tr><td>USDT BSC20</td><td><code>0x15aac92a1945ddbe5c79304bfa388d6be99b26a3</code></td></tr>
+</table>
+
+Created by TAPSIN
