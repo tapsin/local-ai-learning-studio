@@ -142,13 +142,20 @@ app.whenReady().then(() => {
   ipcMain.handle('models:list-local', async () => {
     const settings = await readSettings()
     const root = path.resolve(settings.downloadDir || path.join(os.homedir(), 'AI-Models'))
-    const entries = await fs.readdir(root, { withFileTypes: true }).catch(() => [])
     const result = []
-    for (const entry of entries.filter(item => item.isDirectory())) {
-      const folder = path.join(root, entry.name)
-      const files = await fs.readdir(folder).catch(() => [])
-      if (files.some(name => name === 'config.json' || /\.(safetensors|bin|gguf)$/.test(name))) result.push({ id: entry.name.replace('--', '/'), path: folder })
+    const seen = new Set()
+    async function scan(folder, depth = 0) {
+      const entries = await fs.readdir(folder, { withFileTypes: true }).catch(() => [])
+      const hasModelFile = entries.some(entry => entry.isFile() && (entry.name === 'config.json' || /\.(safetensors|bin|gguf)$/.test(entry.name)))
+      if (hasModelFile) {
+        const id = path.relative(root, folder) || path.basename(root)
+        if (!seen.has(folder)) { seen.add(folder); result.push({ id: id.split(path.sep).join('/').replace('--', '/'), path: folder }) }
+        return
+      }
+      if (depth >= 3) return
+      for (const entry of entries.filter(item => item.isDirectory())) await scan(path.join(folder, entry.name), depth + 1)
     }
+    await scan(root)
     return result.sort((a, b) => a.id.localeCompare(b.id))
   })
   ipcMain.handle('jobs:list', async () => {
