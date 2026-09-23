@@ -1,5 +1,13 @@
 # Local AI Learning Studio
 
+<table border="1">
+<tr><th colspan="2">DONATE:</th></tr>
+<tr><td>USDT TRC20</td><td><code>TYCK6ZyMS6UDt787foPH2QwFuvkdqMw1Jv</code></td></tr>
+<tr><td>USDT BSC20</td><td><code>0x15aac92a1945ddbe5c79304bfa388d6be99b26a3</code></td></tr>
+</table>
+
+Created by TAPSIN
+
 Yerel öncelikli RAG ve model fine-tuning masaüstü uygulaması. Arayüz Electron + React + TypeScript ile hazırlanır.
 
 ## Geliştirme
