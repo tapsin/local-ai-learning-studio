@@ -84,7 +84,8 @@ function App() {
   function dropParquetFolder(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
     if (mode !== 'rag') return flash('Parquet klasörü şu aşamada yalnızca RAG için kullanılabilir.')
-    const path = (event.dataTransfer.files[0] as File & { path?: string })?.path
+    const file = event.dataTransfer.files[0]
+    const path = file ? window.studio.getPathForFile(file) : ''
     if (!path) return flash('Klasör yolu okunamadı; klasör seç düğmesini kullanın.')
     setFile(path); setRows([{ text: 'Parquet klasörü · streaming okuma' }]); flash('Parquet klasörü seçildi; dosyalar RAM’e alınmadan indekslenecek.')
   }

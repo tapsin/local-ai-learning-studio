@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer, webUtils } = require('electron')
 contextBridge.exposeInMainWorld('studio', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   saveSettings: value => ipcRenderer.invoke('settings:save', value),
@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('studio', {
   onDownloadProgress: callback => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('hf:download-progress', listener); return () => ipcRenderer.removeListener('hf:download-progress', listener) },
   openDataFile: () => ipcRenderer.invoke('dialog:open-data'),
   openDataFolder: () => ipcRenderer.invoke('dialog:open-data-folder'),
+  getPathForFile: file => webUtils.getPathForFile(file),
   readDataFile: file => ipcRenderer.invoke('data:read', file),
   writeTemplate: value => ipcRenderer.invoke('template:write', value),
   runJob: job => ipcRenderer.invoke('worker:run', job),
